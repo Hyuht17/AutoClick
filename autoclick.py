@@ -129,7 +129,7 @@ def create_menu():
 
     textmenu = tk.Menu(menubar)
     menubar.add_cascade(label="Cài đặt", menu=textmenu)
-    textmenu.add_command(label="Nhập văn bản", command=open_second_page)
+    textmenu.add_command(label="Nhập văn bản", command=text_enter)
     textmenu.add_command(label="Nhập số lần nhấp", command=open_second_page2)
 # Trong hàm mouseEntered:
  
@@ -192,7 +192,6 @@ def restart_program():
     keyboard.unhook_all()
     
     # Thực hiện các bước restart cần thiết
-    # Ví dụ: Đóng giao diện và mở lại
     window.destroy()
     main() 
 
@@ -202,7 +201,7 @@ def update_button_text():
     click_button.config(text="Bấm {} để Bắt đầu/Dừng".format(hotkey))
 
 
-def open_second_page():
+def text_enter():
     global second_window
     global stored_text
     global second_text_entry
@@ -342,4 +341,3 @@ def stop_func():
     hide_notification()
       
 main()  
-###lhasjkhsdfkahdsd
