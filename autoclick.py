@@ -5,14 +5,13 @@ from pynput import mouse
 import time
 import keyboard
 
+
 mouse_listener = None
 mouse_click = False
 window = None
-txt = ""
 is_running = None
 stored_hotkey = ""
 hotkey_check = True
-stored_text = ""
 hotkey = ""
 label = None
 last_click_time = 0
@@ -46,11 +45,9 @@ def design_theme():
     global click_button
     global display_label
     global hotkey_hook
-    global var
     # Tạo và định dạng các thành phần giao diện
     load_saved_data() 
     hotkey = stored_hotkey
-    txt = stored_text
     click_button = tk.Button(window, text="Bấm {} để Bắt đầu/Dừng".format(hotkey))
     click_button.config(width=20, height=2)
     click_button.bind("<Enter>",mouseEntered)
@@ -59,12 +56,15 @@ def design_theme():
     keyboard.on_press_key("Esc", close_soft)
     
     hotkey_hook = keyboard.on_press_key(hotkey, check_hotkey, suppress=True)
+    create_mouse_button()
+    create_exit_button()
     
+    
+def create_mouse_button():
+    global var
     var = tk.StringVar()
-    # Tạo ô chọn (radio button) cho chuột phải
     frame = tk.Frame(window)
     frame.pack()
-
     # Tạo ô chọn (radio button) cho chuột phải
     right_radio = tk.Radiobutton(frame, text="Chuột Phải", variable=var, value="right", command=update_selection)
     right_radio.pack(side=tk.LEFT)
@@ -82,15 +82,21 @@ def design_theme():
     else:
     # Nếu không có lựa chọn trước đó, mặc định là không có nút nào được chọn
         var.set(None)
+        
+        
+def create_exit_button():
     #tạo nút thoát và đóng 
     exit_button = tk.Button(window, text="Thoát", command=close_soft2)
     exit_button.pack()
     label1 = tk.Label(window, text="Bấm ESC để thoát")
     label1.pack()
+    
+    
 def update_selection():
     global selected_button, var
     selected_button = var.get()
     save_data()
+
 
 def show_notification():
     global root
@@ -101,11 +107,12 @@ def show_notification():
     label.pack()
     root.geometry("+0+0")  # Di chuyển cửa sổ vào góc trái màn hình
     root.mainloop()
+    
+    
 def hide_notification():
     global root  # Kiểm tra xem cửa sổ tồn tại và không được hiển thị
     root.destroy()
 
-    
     
 def close_soft(e):
     if is_running:
@@ -129,13 +136,14 @@ def create_menu():
 
     textmenu = tk.Menu(menubar)
     menubar.add_cascade(label="Cài đặt", menu=textmenu)
-    textmenu.add_command(label="Nhập văn bản", command=text_enter)
     textmenu.add_command(label="Nhập số lần nhấp", command=open_second_page2)
+    textmenu.add_command(label="Record", command=open_record_window)
+
 # Trong hàm mouseEntered:
- 
 def mouseEntered(event):
     button = event.widget
     button.config(text = "Đổi Hotkey", command=press_button)
+
 
 def press_button():
     keyboard.unhook(hotkey_hook)
@@ -145,16 +153,12 @@ def press_button():
     window.bind("<Key>", change_hotkey)
     #window.after(3000, label.pack_forget)
     
+    
 def mouseExited(event):
     button = event.widget
     button.config(text = "Bấm {} để Bắt đầu/Dừng".format(hotkey))      
     
-def create_text_entry(parent):
-    text_entry = tk.Entry(parent)
-    text_entry.pack()
-    txt = text_entry.get()
 
-    
 def check_hotkey(e):
     global is_running, hotkey, last_hotkey_time, hotkey_interval, cnt, number, stored_number
 
@@ -171,8 +175,6 @@ def check_hotkey(e):
         is_running = False
         
 
-
-
 def change_hotkey(event=None):
     global hotkey
     global stored_hotkey # Thêm vào
@@ -187,6 +189,8 @@ def change_hotkey(event=None):
     label.pack_forget()
     hotkey_hook = keyboard.on_press_key(hotkey, check_hotkey)
     restart_program()
+    
+    
 def restart_program():
     # Xóa tất cả các hotkey
     keyboard.unhook_all()
@@ -201,25 +205,19 @@ def update_button_text():
     click_button.config(text="Bấm {} để Bắt đầu/Dừng".format(hotkey))
 
 
-def text_enter():
-    global second_window
-    global stored_text
-    global second_text_entry
-    second_window = tk.Toplevel(window)
-    second_window.title("Nhập văn bản")
-
-    second_text_entry = tk.Entry(second_window)
-    second_text_entry.insert(0, stored_text)  # Chèn văn bản đã lưu vào ô nhập văn bản
-    second_text_entry.pack()
-
-    second_save_button = tk.Button(second_window, text="Lưu", command=save_and_return)
-    second_save_button.pack()
 def open_second_page2():
     global second_window2
     global stored_number
     global second_number_entry
+
+
     second_window2 = tk.Toplevel(window)
     second_window2.title("Nhập số lần nhấp")
+        
+    #Tính toán vị trí của cửa sổ
+    x_coordinate = window.winfo_rootx() + window.winfo_width()
+    y_coordinate = window.winfo_rooty()
+    second_window2.geometry("+{}+{}".format(x_coordinate, y_coordinate))
 
     second_number_entry = tk.Entry(second_window2)
     second_number_entry.insert(0, stored_number)  # Chèn văn bản đã lưu vào ô nhập văn bản
@@ -228,14 +226,7 @@ def open_second_page2():
     second_save_button = tk.Button(second_window2, text="Lưu", command=save_and_return2)
     second_save_button.pack()
 
-def save_and_return():
-    global txt
-    global stored_text
-    txt = second_text_entry.get()
-    stored_text = txt
-    save_data()
-    if second_window:
-        second_window.destroy()
+
 def save_and_return2():
     global stored_number
     stored_number = second_number_entry.get()
@@ -244,44 +235,41 @@ def save_and_return2():
         second_window2.destroy()
         
         
-def load_saved_data():
+def load_saved_data():# hàm tải dữ liệu các nút và văn bản lên 
     global stored_text, stored_hotkey, selected_button, stored_number
     try:
         with open("saved_data.txt", "r") as file:
             data = file.read().splitlines()
-            stored_text = data[0]
-            stored_hotkey = data[1]
-            selected_button = data[2]
-            stored_number = data[3]
+            stored_hotkey = data[0]
+            selected_button = data[1]
+            stored_number = data[2]
     except FileNotFoundError:
         pass
 
 def save_data():
     global stored_hotkey, selected_button, stored_number
     with open("saved_data.txt", "w") as file:
-        file.write(stored_text + "\n")
         file.write(stored_hotkey + "\n")
         file.write(selected_button + "\n")
         file.write(stored_number + "\n")
 
+
 #Phần chạy ứng dụng
-
-
 #chạy nền
     
 # Chọn tọa độ  
 def on_click(x, y, button, pressed):
-    global last_click_time, click_interval, selected_button, cnt
+    global last_click_time, click_interval, selected_button, cnt, mouse_click
 
     if pressed:
         current_time = time.time()
         if (current_time - last_click_time) > click_interval:
             if selected_button and button == button_mapping[selected_button]:
                 # Thực hiện hành động khi click chuột
-                cnt = cnt + 1
                 x, y = pag.position()
+                mouse_clicks = x, y
                 mouse_listener.stop()
-                window.after(1, tool_auto_in_zalo, x, y)
+                print(x, y)
                 last_click_time = current_time
 
 
@@ -297,37 +285,21 @@ def click_position():
 #bắt đầu chạy ứng dụng    
 def show_po():
     window.after(100, show_notification)
-    click_position()
     
 
-
-def click_func(x, y):
-    pag.click(x, y, button='left')
+def click_func():
+    pag.click(0, 100, button="left")
     
 def double_click_func(x, y):
     pag.doubleClick(x, y, button='left')
 
-def print_text(text):
-    global txt, stored_text
-    
-    clip.copy(stored_text)
-
-    # Tạm ngừng để clipboard có thể hoạt động
-    time.sleep(0.001)
-
-    # Dán văn bản vào ứng dụng mục tiêu
-    pag.hotkey('ctrl', 'v')
 
 def press_enter():
     pag.press('enter')
     
     
-def tool_auto_in_zalo(x, y):
+def tool_auto(x, y):
     global cnt, is_running
-    double_click_func(x, y)
-    if stored_text != "":
-        print_text(txt)
-    press_enter()
     if cnt == number and is_running == True:
         stop_func()
         is_running = False
@@ -336,8 +308,68 @@ def tool_auto_in_zalo(x, y):
         click_position()
 
 def stop_func():
-    global mouse_listener
-    mouse_listener.stop()
     hide_notification()
       
-main()  
+  
+
+
+# Danh sách các sự kiện nhấp chuột được ghi lại
+mouse_clicks = []
+
+# Biến đánh dấu xem việc ghi lại sự kiện nhấp chuột đang hoạt động hay không
+recording = False
+
+
+# Hàm thực hiện lại các sự kiện nhấp chuột đã được ghi lại
+def replay_clicks():
+    print("Thực hiện lại các sự kiện nhấp chuột đã được ghi lại:")
+    print(mouse_click)
+    for click in mouse_clicks:
+        print(click)
+        x, y, button = click
+        # Thực hiện lại sự kiện nhấp chuột
+        click_func()
+        print("Click tại tọa độ ({}, {}) bằng nút {}".format(x, y, button))
+
+# Hàm ghi lại sự kiện nhấp chuột
+def record_mouse_click():
+    global mouse_listener
+    # Tạo một thể hiện của Listener chuột
+    mouse_listener = mouse.Listener(on_click=on_click)
+    # Bắt đầu theo dõi sự kiện chuột
+    mouse_listener.start()
+
+# Hàm dừng ghi lại sự kiện nhấp chuột
+def stop_mouse_click_recording():
+    global mouse_listener
+    mouse_listener.stop()
+
+# Tạo giao diện
+def open_record_window():
+    global window_record
+    global start_button
+    global stop_button
+    global replay_button
+        
+    #Tính toán vị trí của cửa sổ
+
+    window_record = tk.Toplevel(window)
+    window_record.title("Ghi lại và Tái tạo Click chuột")
+    window_record.geometry("300x150")
+    
+    x_coordinate = window.winfo_rootx() + window.winfo_width()
+    y_coordinate = window.winfo_rooty()
+    window_record.geometry("+{}+{}".format(x_coordinate, y_coordinate))
+    
+    start_button = tk.Button(window_record, text="Chọn điểm để chọn tọa độ", command=record_mouse_click)
+    start_button.pack(pady=5)
+
+    
+    replay_button = tk.Button(window_record, text="Tái tạo Click chuột", command=replay_clicks)
+    replay_button.pack(pady=5)
+    
+    window_record.mainloop()
+    
+    
+    
+main()
