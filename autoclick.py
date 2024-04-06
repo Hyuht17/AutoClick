@@ -259,7 +259,7 @@ def save_data():
     
 # Chọn tọa độ  
 def on_click(x, y, button, pressed):
-    global last_click_time, click_interval, selected_button, cnt, mouse_click
+    global last_click_time, click_interval, selected_button, cnt, mouse_clicks
 
     if pressed:
         current_time = time.time()
@@ -267,7 +267,7 @@ def on_click(x, y, button, pressed):
             if selected_button and button == button_mapping[selected_button]:
                 # Thực hiện hành động khi click chuột
                 x, y = pag.position()
-                mouse_clicks = x, y
+                mouse_clicks = x, y, button
                 mouse_listener.stop()
                 print(x, y)
                 last_click_time = current_time
@@ -287,8 +287,8 @@ def show_po():
     window.after(100, show_notification)
     
 
-def click_func():
-    pag.click(0, 100, button="left")
+def click_func(click):
+    pag.click(click)
     
 def double_click_func(x, y):
     pag.doubleClick(x, y, button='left')
@@ -323,12 +323,15 @@ recording = False
 # Hàm thực hiện lại các sự kiện nhấp chuột đã được ghi lại
 def replay_clicks():
     print("Thực hiện lại các sự kiện nhấp chuột đã được ghi lại:")
-    print(mouse_click)
+    for i in range(0, 2):
+        print(mouse_clicks)
     for click in mouse_clicks:
         print(click)
-        x, y, button = click
+        if isinstance(click, tuple):
+            x, y, button = click
+
         # Thực hiện lại sự kiện nhấp chuột
-        click_func()
+        click_func(click)
         print("Click tại tọa độ ({}, {}) bằng nút {}".format(x, y, button))
 
 # Hàm ghi lại sự kiện nhấp chuột
