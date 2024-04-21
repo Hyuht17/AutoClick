@@ -5,7 +5,8 @@ from pynput import mouse
 import time
 import keyboard
 
-
+speed_click = 100
+mouse_clicks = []
 mouse_listener = None
 mouse_click = False
 window = None
@@ -267,10 +268,12 @@ def on_click(x, y, button, pressed):
             if selected_button and button == button_mapping[selected_button]:
                 # Thực hiện hành động khi click chuột
                 x, y = pag.position()
-                mouse_clicks = x, y, button
+                mouse_clicks.append((x, y, button))
                 mouse_listener.stop()
-                print(x, y)
+                print(x, y, button)
                 last_click_time = current_time
+                update_point_count_label()
+
 
 
 
@@ -287,17 +290,14 @@ def show_po():
     window.after(100, show_notification)
     
 
-def click_func(click):
-    pag.click(click)
+def click_func(x, y, button_clicks):
+    # Chuyển đổi đối tượng Button thành một số nguyên
+    pag.click(x, y, button=button_clicks)
     
 def double_click_func(x, y):
     pag.doubleClick(x, y, button='left')
 
-
-def press_enter():
-    pag.press('enter')
-    
-    
+ 
 def tool_auto(x, y):
     global cnt, is_running
     if cnt == number and is_running == True:
@@ -314,27 +314,17 @@ def stop_func():
 
 
 # Danh sách các sự kiện nhấp chuột được ghi lại
-mouse_clicks = []
-
-# Biến đánh dấu xem việc ghi lại sự kiện nhấp chuột đang hoạt động hay không
-recording = False
 
 
 # Hàm thực hiện lại các sự kiện nhấp chuột đã được ghi lại
 def replay_clicks():
-    print("Thực hiện lại các sự kiện nhấp chuột đã được ghi lại:")
-    for i in range(0, 2):
-        print(mouse_clicks)
-    for click in mouse_clicks:
-        print(click)
-        if isinstance(click, tuple):
-            x, y, button = click
-
-        # Thực hiện lại sự kiện nhấp chuột
-        click_func(click)
-        print("Click tại tọa độ ({}, {}) bằng nút {}".format(x, y, button))
-
-# Hàm ghi lại sự kiện nhấp chuột
+    global stored_number, speed_click
+    for i in range(stored_number):
+        for clicks in mouse_clicks:
+            x, y, button= clicks
+            click_func(x, y, button.name)
+            time.sleep(speed_click)
+            #print("Click tại tọa độ ({}, {}) bằng nút {}".format(x, y, button))
 def record_mouse_click():
     global mouse_listener
     # Tạo một thể hiện của Listener chuột
@@ -342,37 +332,54 @@ def record_mouse_click():
     # Bắt đầu theo dõi sự kiện chuột
     mouse_listener.start()
 
-# Hàm dừng ghi lại sự kiện nhấp chuột
-def stop_mouse_click_recording():
-    global mouse_listener
-    mouse_listener.stop()
+selected_point_count = 0
 
 # Tạo giao diện
 def open_record_window():
     global window_record
     global start_button
-    global stop_button
-    global replay_button
-        
-    #Tính toán vị trí của cửa sổ
-
+    global click_interval
+    global point_count_label
+    global interval_entry
+    global selected_point_count, speed_click
+    
+    # Tính toán vị trí của cửa sổ
     window_record = tk.Toplevel(window)
     window_record.title("Ghi lại và Tái tạo Click chuột")
-    window_record.geometry("300x150")
+    window_record.geometry("300x200")
     
     x_coordinate = window.winfo_rootx() + window.winfo_width()
     y_coordinate = window.winfo_rooty()
     window_record.geometry("+{}+{}".format(x_coordinate, y_coordinate))
     
+    # Thêm nút bắt đầu
     start_button = tk.Button(window_record, text="Chọn điểm để chọn tọa độ", command=record_mouse_click)
     start_button.pack(pady=5)
+    
+    # Thêm ô nhập cho thời gian mỗi lần nhấp
+    interval_frame = tk.Frame(window_record)
+    interval_frame.pack(pady=5)
+    
+    interval_label = tk.Label(interval_frame, text="Thời gian mỗi lần nhấp (ms):")
+    interval_label.pack(side=tk.LEFT)
+    
+    global interval_entry
+    interval_entry = tk.Entry(interval_frame)
+   # interval_entry.insert(0, str(speed_click))  # Giá trị mặc định là 100ms
+    interval_entry.pack(side=tk.LEFT)
+    
+    # Thêm nút cập nhật thời gian
+    new_interval = interval_entry.get()
+    #speed_click = int(new_interval)
+    
+    # Thêm nhãn để hiển thị số điểm đã chọn
+    point_count_label = tk.Label(window_record, text="Số điểm đã chọn: {}".format(selected_point_count))
+    point_count_label.pack(pady=5)
 
-    
-    replay_button = tk.Button(window_record, text="Tái tạo Click chuột", command=replay_clicks)
-    replay_button.pack(pady=5)
-    
-    window_record.mainloop()
-    
+def update_point_count_label():
+    selected_point_count = len(mouse_clicks) + 1
+    global point_count_label
+    point_count_label.config(text="Số điểm đã chọn: {}".format(selected_point_count))
     
     
 main()
