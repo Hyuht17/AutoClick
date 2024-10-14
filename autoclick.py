@@ -363,6 +363,12 @@ def open_record_window():
     interval_label = tk.Label(interval_frame, text="Thời gian mỗi lần nhấp (ms):")
     interval_label.pack(side=tk.LEFT)
     
+
+    
+    # Thêm nhãn để hiển thị số điểm đã chọn
+    point_count_label = tk.Label(window_record, text="Số điểm đã chọn: {}".format(selected_point_count))
+    point_count_label.pack(pady=5)
+    
     global interval_entry
     interval_entry = tk.Entry(interval_frame)
    # interval_entry.insert(0, str(speed_click))  # Giá trị mặc định là 100ms
@@ -371,10 +377,6 @@ def open_record_window():
     # Thêm nút cập nhật thời gian
     new_interval = interval_entry.get()
     #speed_click = int(new_interval)
-    
-    # Thêm nhãn để hiển thị số điểm đã chọn
-    point_count_label = tk.Label(window_record, text="Số điểm đã chọn: {}".format(selected_point_count))
-    point_count_label.pack(pady=5)
 
 def update_point_count_label():
     selected_point_count = len(mouse_clicks) + 1
